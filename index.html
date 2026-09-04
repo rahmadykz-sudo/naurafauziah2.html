@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Happy Birthday My Baby Girl</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Caveat:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Montserrat:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none}
+    body{background:#2b1429;color:#fff;font-family:'Montserrat',sans-serif;min-height:100vh;overflow-x:hidden}
+    #canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:10;pointer-events:none}
+
+    /* OPENING & OVERLAYS */
+    #opening-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#2b1429;z-index:100;display:flex;flex-direction:column;justify-content:center;align-items:center;transition:opacity 1s,visibility 1s}
+    .flower-loader{font-size:4rem;animation:spin 2s infinite ease-in-out;margin-bottom:1.5rem}
+    .loading-text{color:#e2b6e6;font-size:1rem;font-weight:300;letter-spacing:2px;animation:pulse 1.5s infinite alternate}
+
+    #password-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(20,10,25,0.88);backdrop-filter:blur(25px);-webkit-backdrop-filter:blur(25px);z-index:90;display:flex;flex-direction:column;justify-content:center;align-items:center;opacity:0;visibility:hidden;transition:opacity .8s,visibility .8s}
+    #password-overlay.show{opacity:1;visibility:visible}
+    .ios-lock-title{color:#fff;font-size:1.2rem;font-weight:500;margin-bottom:1.5rem}
+    .dots-container{display:flex;gap:16px;margin-bottom:2.5rem}
+    .dot{width:14px;height:14px;border-radius:50%;border:2px solid rgba(255,255,255,0.8);transition:all .2s}
+    .dot.filled{background:#fff;transform:scale(1.1)}
+    .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:20px 28px}
+    .key-btn{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.1);color:#fff;font-size:1.8rem;display:flex;justify-content:center;align-items:center;cursor:pointer;backdrop-filter:blur(10px)}
+    .key-btn:active{background:rgba(255,255,255,0.4);transform:scale(.92)}
+    .key-btn.empty{background:0 0;border:none;pointer-events:none}
+    .key-btn.delete{font-size:1rem;background:0 0;border:none}
+
+    #gift-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#2b1429;z-index:80;display:flex;flex-direction:column;justify-content:center;align-items:center;opacity:0;visibility:hidden;transition:opacity .8s,visibility .8s}
+    #gift-overlay.show{opacity:1;visibility:visible}
+    .gift-title{color:#e2b6e6;font-size:1.1rem;margin-bottom:3.5rem;letter-spacing:1.5px;z-index:15}
+    .gift-container{position:relative;display:flex;justify-content:center;align-items:center}
+    .light-rays{position:absolute;width:450px;height:450px;background:repeating-conic-gradient(from 0deg,rgba(255,255,255,0.18) 0deg 12deg,transparent 12deg 24deg);border-radius:50%;animation:rotate 12s linear infinite;z-index:11;pointer-events:none;mask-image:radial-gradient(circle,rgba(0,0,0,1) 10%,rgba(0,0,0,0) 70%);-webkit-mask-image:radial-gradient(circle,rgba(0,0,0,1) 10%,rgba(0,0,0,0) 70%)}
+    .gift-box{position:relative;width:190px;height:150px;background:linear-gradient(135deg,#f472b6,#db2777);border-radius:0 0 12px 12px;cursor:pointer;box-shadow:0 15px 35px rgba(0,0,0,0.5),0 0 25px rgba(236,72,153,0.5);animation:shake 2.2s infinite ease-in-out;z-index:12}
+    .gift-box::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:32px;height:100%;background:#facc15}
+    .gift-box::after{content:'';position:absolute;top:50%;left:0;transform:translateY(-50%);width:100%;height:32px;background:#facc15}
+    .gift-lid{position:absolute;top:-32px;left:-10px;width:210px;height:36px;background:linear-gradient(135deg,#f472b6,#db2777);border-radius:8px;box-shadow:0 5px 15px rgba(0,0,0,0.3);transition:transform .6s,opacity .6s;z-index:13}
+    .gift-lid::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:32px;height:100%;background:#facc15}
+    .gift-bow{position:absolute;top:-20px;left:50%;transform:translateX(-50%);width:55px;height:22px;background:#facc15;border-radius:20px;z-index:14}
+    .gift-box.open .gift-lid{transform:translateY(-150px) rotate(-30deg);opacity:0}
+    .gift-box.open{animation:none}
+
+    /* MAIN CONTAINER & HERO */
+    .container{position:relative;z-index:20;display:none;flex-direction:column;align-items:center;width:100%;opacity:0;transform:translateY(20px);transition:all 1s ease-out}
+    .container.show{display:flex !important;opacity:1 !important;transform:translateY(0) !important}
+    .hero-page{min-height:100vh;width:100%;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:4rem 1.5rem 3.5rem;text-align:center}
+    .top-sub{color:#e2b6e6;font-size:.9rem;letter-spacing:2px}
+    .main-title-group{display:flex;flex-direction:column;align-items:center;margin:auto 0}
+    .title-line-1{font-family:'Playfair Display',serif;font-size:2.2rem;color:#fff;line-height:1.1}
+    .title-line-2{font-family:'Alex Brush',cursive;font-size:3.2rem;color:#f472b6;line-height:1;margin-top:-.1rem;margin-bottom:.8rem}
+    .title-line-3{font-family:'Playfair Display',serif;font-size:3.2rem;color:#fff;letter-spacing:2px;line-height:1.15;text-transform:uppercase}
+    .scroll-hint{display:flex;flex-direction:column;align-items:center;gap:6px;color:#e2b6e6;font-size:.75rem;letter-spacing:2px;text-transform:uppercase;animation:float 2s infinite}
+
+    /* BOUQUET SECTION */
+    .bouquet-section{min-height:100vh;width:100%;max-width:500px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:3rem 1.5rem;position:relative}
+    .section-subtitle{color:#e2b6e6;font-size:.8rem;letter-spacing:3px;text-transform:uppercase;margin-bottom:.5rem}
+    .section-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:#fff;margin-bottom:.5rem}
+    .section-desc{color:#d8b4fe;font-size:.9rem;margin-bottom:1rem;min-height:24px;text-align:center;transition:all .3s}
+    .floating-flowers-container{position:relative;width:100%;height:220px;margin-top:1rem}
+    .clickable-flower{position:absolute;font-size:2.8rem;cursor:pointer;filter:drop-shadow(0 5px 15px rgba(0,0,0,0.4));transition:transform .15s ease;animation:floatFlower 3s infinite ease-in-out alternate}
+    .clickable-flower:active{transform:scale(1.3)!important}
+    .bouquet-display-area{position:relative;width:100%;height:320px;display:flex;justify-content:center;align-items:flex-end}
+    .vase{width:110px;height:75px;background:rgba(244,114,182,0.25);border:2px solid rgba(244,114,182,0.6);border-radius:15px 15px 35px 35px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);z-index:5;position:relative;box-shadow:0 10px 25px rgba(0,0,0,0.3)}
+    .vase::after{content:'🎀';position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:1.6rem}
+    .bouquet-stem{position:absolute;bottom:40px;left:50%;width:4px;background:linear-gradient(to top,#15803d,#4ade80);border-radius:4px;transform-origin:bottom center;transition:height .6s cubic-bezier(.175,.885,.32,1.275);z-index:2}
+    .bouquet-flower-head{position:absolute;top:-20px;left:50%;transform:translateX(-50%) scale(0);font-size:2.5rem;transition:transform .5s cubic-bezier(.175,.885,.32,1.275);filter:drop-shadow(0 4px 8px rgba(0,0,0,0.3))}
+    .bouquet-flower-head.bloomed{transform:translateX(-50%) scale(1)}
+
+    /* LETTER SECTION */
+    .letter-section{min-height:100vh;width:100%;max-width:520px;padding:3rem 1.2rem;display:flex;flex-direction:column;align-items:center}
+    .letter-page-title{font-family:'Playfair Display',serif;font-size:1.8rem;letter-spacing:2px;color:#f3d5f7;margin-bottom:1.8rem;text-align:center}
+    .letter-card{position:relative;width:100%;background:#fdf6f9;color:#332230;border-radius:16px;padding:2.2rem 1.8rem;box-shadow:0 15px 35px rgba(0,0,0,0.4);font-family:'Cormorant Garamond',serif;overflow:hidden}
+    .letter-header{text-align:center;margin-bottom:1.5rem}
+    .letter-divider{display:flex;align-items:center;justify-content:center;gap:10px;color:#d88db7;font-size:.9rem;margin-bottom:.4rem}
+    .letter-date{font-style:italic;color:#a37293;font-size:1.05rem;display:block}
+    .flower-top-center{text-align:center;font-size:1.3rem;margin-bottom:1rem}
+    .letter-salutation{font-size:1.8rem;font-weight:600;color:#2c1527;margin-bottom:1.2rem;font-family:'Cormorant Garamond',serif}
+    .letter-body{font-size:1.15rem;line-height:1.65;color:#443040;font-weight:400}
+    .letter-body p{margin-bottom:1.2rem;text-align:left}
+    .ps-box{background:#fbebf3;border-radius:10px;padding:1.1rem 1.2rem;margin-top:1.5rem;font-style:italic;color:#6b2d56;font-size:1.08rem;line-height:1.5;position:relative}
+    .letter-footer{text-align:right;margin-top:2rem;font-style:italic;font-size:1.1rem;color:#7a3c63}
+    .bg-flower{position:absolute;pointer-events:none;opacity:.65;font-size:1.1rem}
+
+    /* POLAROID GALLERY */
+    .photo-page{width:100%;max-width:480px;padding:4rem 1.2rem 5rem;display:flex;flex-direction:column;align-items:center}
+    .photo-page-subtitle{font-size:0.8rem;letter-spacing:4px;color:#d8b4fe;text-transform:uppercase;margin-bottom:0.4rem;text-align:center;opacity:0.9}
+    .photo-page-title{font-family:'Playfair Display',serif;font-size:2rem;color:#fff;margin-bottom:0.5rem;text-align:center}
+    .photo-page-desc{font-size:0.9rem;color:#e2b6e6;margin-bottom:3rem;text-align:center;font-style:italic}
+    .polaroid-container{display:flex;flex-direction:column;gap:2.5rem;width:100%;align-items:center}
+    .polaroid-card{position:relative;background:#fefefe;padding:14px 14px 20px 14px;border-radius:4px;box-shadow:0 12px 30px rgba(0,0,0,0.5);width:90%;max-width:340px;transition:transform 0.3s ease}
+    .polaroid-card:hover{transform:scale(1.03) rotate(0deg) !important;z-index:30}
+    .polaroid-tape{position:absolute;top:-12px;left:50%;transform:translateX(-50%);width:75px;height:22px;background:rgba(235,225,215,0.75);box-shadow:0 1px 3px rgba(0,0,0,0.15);backdrop-filter:blur(2px);z-index:10}
+    .polaroid-img-box{position:relative;width:100%;aspect-ratio:1/1;overflow:hidden;border-radius:2px;background:#eee}
+    .polaroid-img-box img{width:100%;height:100%;object-fit:cover}
+    .polaroid-caption{font-family:'Caveat',cursive;font-size:1.35rem;color:#2c1527;text-align:center;margin-top:14px;line-height:1.2;font-weight:600}
+    .rot-left-1{transform:rotate(-3deg)}
+    .rot-right-1{transform:rotate(2.5deg)}
+    .rot-left-2{transform:rotate(-2deg)}
+    .rot-right-2{transform:rotate(3.5deg)}
+
+    /* JAR OF GRATITUDE */
+    .jar-section{min-height:100vh;width:100%;max-width:480px;padding:3rem 1.2rem 5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+    .jar-subtitle{font-size:0.75rem;letter-spacing:4px;color:#d8b4fe;text-transform:uppercase;margin-bottom:0.5rem;text-align:center}
+    .jar-title{font-family:'Playfair Display',serif;font-size:1.8rem;color:#fff;margin-bottom:0.6rem;text-align:center;line-height:1.2}
+    .jar-desc{font-size:0.85rem;color:#e2b6e6;margin-bottom:2.5rem;text-align:center}
+    .jar-wrapper{position:relative;width:180px;height:250px;margin-bottom:2rem;display:flex;justify-content:center;align-items:center}
+    .glass-jar{position:relative;width:100%;height:100%;background:rgba(255,255,255,0.08);border:3px solid rgba(255,255,255,0.35);border-radius:25px 25px 35px 35px;box-shadow:0 15px 35px rgba(0,0,0,0.4),inset 0 0 15px rgba(255,255,255,0.1);backdrop-filter:blur(3px);overflow:hidden;transition:transform 0.1s ease-in-out}
+    .glass-jar::before{content:'';position:absolute;top:-15px;left:50%;transform:translateX(-50%);width:110px;height:20px;background:rgba(244,114,182,0.6);border:2px solid rgba(255,255,255,0.5);border-radius:10px;z-index:2}
+    .jar-notes-inside{position:absolute;bottom:15px;left:0;width:100%;height:75%;display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;gap:8px;padding:10px}
+    .mini-note{width:36px;height:26px;background:rgba(244,114,182,0.7);border-radius:5px;box-shadow:0 2px 5px rgba(0,0,0,0.2);transform:rotate(calc(var(--r) * 1deg))}
+    .shake-btn{background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.3);color:#fff;padding:12px 28px;border-radius:30px;font-size:0.95rem;cursor:pointer;backdrop-filter:blur(10px);display:flex;align-items:center;gap:8px;transition:all 0.2s}
+    .shake-btn:active{transform:scale(0.95);background:rgba(255,255,255,0.25)}
+    .jar-shaking{animation:jarShake 0.5s ease-in-out infinite}
+    .note-card-popup{position:relative;width:100%;max-width:380px;background:#fff;color:#332230;border-radius:12px;padding:2rem 1.5rem 1.5rem;margin-top:1.5rem;box-shadow:0 15px 35px rgba(0,0,0,0.5);display:none;opacity:0;transform:translateY(15px);transition:all 0.5s ease;font-family:'Playfair Display',serif;text-align:center}
+    .note-card-popup.show{display:block;opacity:1;transform:translateY(0)}
+    .note-number{position:absolute;top:12px;right:16px;font-size:0.75rem;color:#aaa;font-family:'Montserrat',sans-serif}
+    .note-text{font-size:1.15rem;line-height:1.5;color:#2c1527;margin-bottom:1.2rem}
+    .note-decor{font-size:1.2rem}
+
+    /* CLOSING SECTION */
+    .closing-section{min-height:100vh;width:100%;max-width:480px;padding:4rem 1.5rem 6rem;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative}
+    .closing-top-subtitle{font-size:0.8rem;letter-spacing:3px;color:#f3d5f7;margin-bottom:1.8rem;display:flex;align-items:center;gap:8px}
+    .closing-main-title{font-family:'Playfair Display',serif;font-size:2.2rem;color:#fff;line-height:1.25;margin-bottom:2rem}
+    .closing-main-title span{font-family:'Alex Brush',cursive;color:#f472b6;font-size:2.8rem;display:block;margin:.2rem 0}
+    .closing-body-text{color:#e2b6e6;font-size:0.95rem;line-height:1.8;max-width:380px;margin-bottom:2.5rem;font-weight:300}
+    .closing-footer-text{font-size:0.85rem;letter-spacing:2px;color:#f3d5f7;font-style:italic;display:flex;align-items:center;gap:8px}
+
+    @keyframes jarShake{0%,100%{transform:rotate(0deg) scale(1)}20%{transform:rotate(-8deg) scale(1.02) translateY(-5px)}40%{transform:rotate(8deg) scale(1.02) translateY(5px)}60%{transform:rotate(-6deg) scale(1.01) translateY(-3px)}80%{transform:rotate(6deg) scale(1.01) translateY(3px)}}
+    @keyframes spin{0%{transform:scale(.8) rotate(0);opacity:.6}50%{transform:scale(1.2) rotate(180deg);opacity:1}100%{transform:scale(.8) rotate(360deg);opacity:.6}}
+    @keyframes pulse{from{opacity:.5}to{opacity:1}}
+    @keyframes rotate{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+    @keyframes shake{0%,100%{transform:rotate(0) scale(1)}20%{transform:rotate(-3deg) scale(1.02)}40%{transform:rotate(3deg) scale(1.02)}60%{transform:rotate(-2deg) scale(1.01)}80%{transform:rotate(2deg) scale(1.01)}}
+    @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(8px)}}
+    @keyframes floatFlower{0%{transform:translateY(0) rotate(0)}100%{transform:translateY(-12px) rotate(8deg)}}
+    @keyframes shakePin{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+    @media(max-width:480px){.title-line-1{font-size:2rem}.title-line-2,.title-line-3{font-size:2.8rem}.section-title{font-size:1.8rem}.letter-card{padding:1.8rem 1.3rem}.closing-main-title{font-size:1.9rem}.closing-main-title span{font-size:2.4rem}}
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  
+  <audio id="bgMusic" loop>
+    <source src="Backstreet Boys - Shape Of My Heart Official HD Video.mp3" type="audio/mpeg">
+  </audio>
+
+  <div id="opening-overlay">
+    <div class="flower-loader">🌸</div>
+    <div class="loading-text">Preparing something special for you...</div>
+  </div>
+
+  <div id="password-overlay">
+    <div class="ios-lock-title">Masukkan Kode PIN</div>
+    <div class="dots-container" id="dotsContainer">
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+      <div class="dot"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div>
+    </div>
+    <div class="keypad">
+      <button class="key-btn" onclick="pressKey('1')">1</button>
+      <button class="key-btn" onclick="pressKey('2')">2</button>
+      <button class="key-btn" onclick="pressKey('3')">3</button>
+      <button class="key-btn" onclick="pressKey('4')">4</button>
+      <button class="key-btn" onclick="pressKey('5')">5</button>
+      <button class="key-btn" onclick="pressKey('6')">6</button>
+      <button class="key-btn" onclick="pressKey('7')">7</button>
+      <button class="key-btn" onclick="pressKey('8')">8</button>
+      <button class="key-btn" onclick="pressKey('9')">9</button>
+      <button class="key-btn empty"></button>
+      <button class="key-btn" onclick="pressKey('0')">0</button>
+      <button class="key-btn delete" onclick="deleteKey()">Hapus</button>
+    </div>
+  </div>
+
+  <div id="gift-overlay">
+    <div class="gift-title">Tap the gift box to open it 🎁</div>
+    <div class="gift-container">
+      <div class="light-rays"></div>
+      <div class="gift-box" id="giftBox" onclick="openGift()">
+        <div class="gift-bow"></div>
+        <div class="gift-lid"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container" id="main-container">
+    <section class="hero-page">
+      <div class="top-sub">🌸 Your Special Day 🌸</div>
+      <div class="main-title-group">
+        <div class="title-line-1">Happy</div>
+        <div class="title-line-2">Birthday</div>
+        <div class="title-line-3">MY<br>BABY<br>GIRL</div>
+      </div>
+      <div class="scroll-hint"><span>Scroll Down</span><span>∨</span></div>
+    </section>
+
+    <section class="bouquet-section">
+      <div style="text-align:center">
+        <div class="section-subtitle">— MY FIRST GIFT —</div>
+        <div class="section-title">A Digital Bouquet</div>
+        <div class="section-desc" id="bouquetMessage">Klik bunga untuk menambahkannya ke buket! 🌸</div>
+      </div>
+      <div class="floating-flowers-container">
+        <span class="clickable-flower" style="top:20%;left:15%" onclick="collectFlower('🌸','Kamu selalu bikin hariku terasa lebih cerah!')">🌸</span>
+        <span class="clickable-flower" style="top:10%;left:45%;animation-delay:.4s" onclick="collectFlower('🌺','Semoga semua impianmu tercapai ya!')">🌺</span>
+        <span class="clickable-flower" style="top:25%;left:75%;animation-delay:.8s" onclick="collectFlower('🌷','Terima kasih udah selalu ada buat aku 💖')">🌷</span>
+        <span class="clickable-flower" style="top:60%;left:10%;animation-delay:.2s" onclick="collectFlower('🌻','Senyum kamu itu hal terfavoritku!')">🌻</span>
+        <span class="clickable-flower" style="top:55%;left:80%;animation-delay:.6s" onclick="collectFlower('🌹','You mean the absolute world to me ✨')">🌹</span>
+      </div>
+      <div class="bouquet-display-area" id="bouquetArea"><div class="vase"></div></div>
+    </section>
+
+    <section class="letter-section">
+      <div class="letter-page-title">A Letter For You</div>
+      <div class="letter-card">
+        <span class="bg-flower" style="top:12px;left:14px">🌸</span>
+        <span class="bg-flower" style="top:12px;right:14px">🌼</span>
+        <span class="bg-flower" style="top:180px;left:10px">🌹</span>
+        <span class="bg-flower" style="top:260px;right:12px">🌸</span>
+        <span class="bg-flower" style="top:420px;left:15px">🌹</span>
+        <span class="bg-flower" style="top:490px;right:18px">🌼</span>
+        <span class="bg-flower" style="bottom:12px;right:12px">🌸</span>
+
+        <div class="letter-header">
+          <div class="letter-divider">🌸 ✦ 🌸</div>
+          <span class="letter-date">September 4</span>
+        </div>
+
+        <div class="flower-top-center">🌼</div>
+        <div class="letter-salutation">My dearest Naura Fauziah Putri,</div>
+
+        <div class="letter-body">
+          <p>Happy birthday, baby girl Naura Fauziah Putri! May you have a long and healthy life, and may you be blessed with abundant provision and a healthy, strong family.</p>
+          <p>I hope all your dreams and wishes come true. Keep up the spirit with your schooling—no slacking off, haha! You need to be diligent; especially when Mom needs your help, make sure you help wholeheartedly, okay?</p>
+          <div class="ps-box">P.S. — I will always be by your side—today, tomorrow, and always. 🤍🌸</div>
+        </div>
+
+        <div class="letter-footer">With all my love ❤️</div>
+      </div>
+    </section>
+
+    <section class="photo-page">
+      <div class="photo-page-subtitle">— A COLLECTION OF MEMORIES —</div>
+      <div class="photo-page-title">Our Photo Memories 🌸</div>
+      <div class="photo-page-desc">Every picture holds a beautiful story</div>
+
+      <div class="polaroid-container">
+        <div class="polaroid-card rot-left-1">
+          <div class="polaroid-tape"></div>
+          <div class="polaroid-img-box"><img src="IMG-20260904-WA0007.jpg" alt="Foto 1"></div>
+          <div class="polaroid-caption">Our very first sunset together 🌅🌸</div>
+        </div>
+        <div class="polaroid-card rot-right-1">
+          <div class="polaroid-tape"></div>
+          <div class="polaroid-img-box"><img src="IMG-20260904-WA0008.jpg" alt="Foto 2"></div>
+          <div class="polaroid-caption">Our favourite café in the corner of the city ☕🌼</div>
+        </div>
+        <div class="polaroid-card rot-left-2">
+          <div class="polaroid-tape"></div>
+          <div class="polaroid-img-box"><img src="IMG-20260904-WA0009.jpg" alt="Foto 3"></div>
+          <div class="polaroid-caption">You, being cute without even trying 🤪💖</div>
+        </div>
+        <div class="polaroid-card rot-right-2">
+          <div class="polaroid-tape"></div>
+          <div class="polaroid-img-box"><img src="IMG-20260904-WA0010.jpg" alt="Foto 4"></div>
+          <div class="polaroid-caption">My personal favorite view in the world ✨🌺</div>
+        </div>
+        <div class="polaroid-card rot-left-1">
+          <div class="polaroid-tape"></div>
+          <div class="polaroid-img-box"><img src="IMG-20260904-WA0011.jpg" alt="Foto 5"></div>
+          <div class="polaroid-caption">Partners in crime and food hunting 🍕🎀</div>
+        </div>
+        <div class="polaroid-card rot-right-1">
+          <div class="polaroid-tape"></div>
+          <div class="polaroid-img-box"><img src="IMG-20260904-WA0012.jpg" alt="Foto 6"></div>
+          <div class="polaroid-caption">Forever stuck with me, no refund! 🤍💫</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="jar-section">
+      <div class="jar-subtitle">— FROM MY HEART TO YOURS —</div>
+      <div class="jar-title">Reasons I'm Grateful to Know You</div>
+      <div class="jar-desc">Shake the jar and pick a note 🫙</div>
+
+      <div class="jar-wrapper">
+        <div class="glass-jar" id="glassJar">
+          <div class="jar-notes-inside">
+            <div class="mini-note" style="--r:-15"></div>
+            <div class="mini-note" style="--r:20"></div>
+            <div class="mini-note" style="--r:-8"></div>
+            <div class="mini-note" style="--r:12"></div>
+            <div class="mini-note" style="--r:-25"></div>
+            <div class="mini-note" style="--r:5"></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="shake-btn" onclick="shakeJar()">
+        <span>🫙</span> Shake the Jar
+      </button>
+
+      <div class="note-card-popup" id="notePopup">
+        <div class="note-number" id="noteNum">#1</div>
+        <div class="note-text" id="noteText">Your presence alone is enough to make any room feel warmer.</div>
+        <div class="note-decor">💖🌸</div>
+      </div>
+    </section>
+
+    <section class="closing-section">
+      <div class="closing-top-subtitle">🌸 With all my heart 🌸</div>
+      
+      <div class="closing-main-title">
+        May your life<br>
+        <span>always be filled</span>
+        with flowers
+      </div>
+
+      <div class="closing-body-text">
+        Happy birthday, Naura Fauziah Putri. May your days always be filled with love, happiness, and all the beautiful things you deserve. I am grateful every single day to know you.
+      </div>
+
+      <div class="closing-footer-text">
+        — With love that never runs out 💕 —
+      </div>
+    </section>
+  </div>
+    <script>
+    const overlay = document.getElementById('opening-overlay');
+    const passwordOverlay = document.getElementById('password-overlay');
+    const giftOverlay = document.getElementById('gift-overlay');
+    const giftBox = document.getElementById('giftBox');
+    const mainContainer = document.getElementById('main-container');
+    const dotsContainer = document.getElementById('dotsContainer');
+    const bgMusic = document.getElementById('bgMusic');
+    const targetPin = "11072026";
+    let enteredPin = "";
+
+    setTimeout(() => {
+      overlay.style.opacity = '0';
+      overlay.style.visibility = 'hidden';
+      passwordOverlay.classList.add('show');
+    }, 3500);
+
+    function playAudio() {
+      bgMusic.play().catch(err => {
+        console.log("Autoplay diproteksi browser:", err);
+      });
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        bgMusic.pause();
+      } else if (enteredPin === targetPin) {
+        bgMusic.play();
+      }
+    });
+
+    window.addEventListener('beforeunload', () => {
+      bgMusic.pause();
+    });
+
+    function updateDots() {
+      const dots = dotsContainer.querySelectorAll('.dot');
+      dots.forEach((d, i) => d.classList.toggle('filled', i < enteredPin.length));
+    }
+
+    function pressKey(n) {
+      if (enteredPin.length < targetPin.length) {
+        enteredPin += n;
+        updateDots();
+        if (enteredPin.length === targetPin.length) {
+          setTimeout(verifyPin, 150);
+        }
+      }
+    }
+
+    function deleteKey() {
+      if (enteredPin.length > 0) {
+        enteredPin = enteredPin.slice(0, -1);
+        updateDots();
+      }
+    }
+
+    function verifyPin() {
+      if (enteredPin === targetPin) {
+        passwordOverlay.style.opacity = '0';
+        passwordOverlay.style.visibility = 'hidden';
+        playAudio();
+        setTimeout(() => giftOverlay.classList.add('show'), 300);
+      } else {
+        dotsContainer.style.animation = 'shakePin .4s ease';
+        setTimeout(() => {
+          dotsContainer.style.animation = '';
+          enteredPin = "";
+          updateDots();
+        }, 400);
+      }
+    }
+
+    let isOpened = false;
+    function openGift() {
+      if (isOpened) return;
+      isOpened = true;
+      giftBox.classList.add('open');
+      triggerBurst();
+      setTimeout(() => {
+        giftOverlay.style.opacity = '0';
+        giftOverlay.style.visibility = 'hidden';
+        mainContainer.classList.add('show');
+      }, 1000);
+    }
+
+    function collectFlower(e, m) {
+      const msg = document.getElementById('bouquetMessage');
+      msg.style.opacity = 0;
+      setTimeout(() => {
+        msg.innerText = `"${m}"`;
+        msg.style.opacity = 1;
+      }, 200);
+
+      const area = document.getElementById('bouquetArea');
+      const h = Math.floor(Math.random() * 70) + 160;
+      const a = Math.floor(Math.random() * 70) - 35;
+      const l = Math.floor(Math.random() * 60) - 30;
+
+      const stem = document.createElement('div');
+      stem.className = 'bouquet-stem';
+      stem.style.transform = `translateX(${l}px) rotate(${a}deg)`;
+
+      const head = document.createElement('div');
+      head.className = 'bouquet-flower-head';
+      head.innerText = e;
+
+      stem.appendChild(head);
+      area.appendChild(stem);
+
+      setTimeout(() => stem.style.height = `${h}px`, 50);
+      setTimeout(() => {
+        head.classList.add('bloomed');
+        triggerBurst();
+      }, 550);
+    }
+
+    const jarNotesList = [
+      "Your presence alone is enough to make any room feel warmer.",
+      "The way you smile randomly always brightens up my whole day.",
+      "Thank you for being my safest place to share everything.",
+      "You make the simplest moments feel extra special.",
+      "Your kindness and gentle heart inspire me every single day.",
+      "I'm endlessly grateful for every laugh we've shared together."
+    ];
+    let noteIndex = 0;
+
+    function shakeJar() {
+      const glassJar = document.getElementById('glassJar');
+      const notePopup = document.getElementById('notePopup');
+      const noteText = document.getElementById('noteText');
+      const noteNum = document.getElementById('noteNum');
+
+      notePopup.classList.remove('show');
+      glassJar.classList.add('jar-shaking');
+
+      setTimeout(() => {
+        glassJar.classList.remove('jar-shaking');
+        noteNum.innerText = `#${noteIndex + 1}`;
+        noteText.innerText = jarNotesList[noteIndex];
+        notePopup.classList.add('show');
+
+        triggerBurst();
+        noteIndex = (noteIndex + 1) % jarNotesList.length;
+      }, 800);
+    }
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    const flowerEmojis = ['🌸', '🌺', '🌼', '🌷', '✨', '💖'];
+
+    class FlowerParticle {
+      constructor(isBurst = false) {
+        this.isBurst = isBurst;
+        this.reset();
+      }
+
+      reset() {
+        if (this.isBurst) {
+          this.x = canvas.width / 2;
+          this.y = canvas.height / 2;
+          const a = Math.random() * Math.PI * 2;
+          const s = Math.random() * 16 + 8;
+          this.speedX = Math.cos(a) * s;
+          this.speedY = Math.sin(a) * s - 4;
+          this.size = Math.random() * 22 + 16;
+          this.opacity = 1;
+          this.gravity = 0.2;
+        } else {
+          this.x = Math.random() * canvas.width;
+          this.y = Math.random() * -canvas.height;
+          this.size = Math.random() * 16 + 12;
+          this.speedY = Math.random() * 1.8 + 1;
+          this.speedX = Math.random() - 0.5;
+          this.opacity = Math.random() * 0.6 + 0.4;
+          this.gravity = 0;
+        }
+        this.rotation = Math.random() * 360;
+        this.rotationSpeed = (Math.random() - 0.5) * 3;
+        this.type = flowerEmojis[Math.floor(Math.random() * flowerEmojis.length)];
+      }
+
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation * Math.PI / 180);
+        ctx.globalAlpha = this.opacity;
+        ctx.font = `${this.size}px serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(this.type, 0, 0);
+        ctx.restore();
+      }
+
+      update() {
+        if (this.isBurst) {
+          this.x += this.speedX;
+          this.y += this.speedY;
+          this.speedY += this.gravity;
+          this.opacity -= 0.015;
+        } else {
+          this.y += this.speedY;
+          this.x += Math.sin(this.y * 0.01) + this.speedX;
+          if (this.y > canvas.height + 20) {
+            this.reset();
+            this.y = -20;
+          }
+        }
+        this.rotation += this.rotationSpeed;
+      }
+    }
+
+    const rainParticles = [];
+    let burstParticles = [];
+
+    for (let i = 0; i < 35; i++) {
+      rainParticles.push(new FlowerParticle(false));
+    }
+
+    function triggerBurst() {
+      for (let i = 0; i < 50; i++) {
+        burstParticles.push(new FlowerParticle(true));
+      }
+    }
+
+    function renderAnimation() {
+      requestAnimationFrame(renderAnimation);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      rainParticles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+
+      for (let i = burstParticles.length - 1; i >= 0; i--) {
+        const p = burstParticles[i];
+        p.update();
+        p.draw();
+        if (p.opacity <= 0) {
+          burstParticles.splice(i, 1);
+        }
+      }
+    }
+
+    renderAnimation();
+  </script>
+</body>
+</html>
